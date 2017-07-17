@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLConnection;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.swing.JButton;
@@ -20,7 +21,8 @@ import javax.swing.JTextField;
 public class AutoBookmark {
 	
 	public static void main(String[] args){
-		new Login();
+		new AutoBookmark("", "Lazinism Test");
+		//new Login();
 	}
 	String cookies;
 	
@@ -30,8 +32,9 @@ public class AutoBookmark {
 	public AutoBookmark(String cookies, String id) {
 		this.cookies = cookies;
 		this.jf = new JFrame("간단 북마크 등록기 - 로그인 완료("+id+")");
-		setcenter(jf);
+		jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		jf.setSize(400, 100);
+		setcenter(jf);
 		jf.setLayout(new GridLayout(2, 1));
 		jtf = new JTextField();
 		JButton jb = new JButton("북마크 등록");
@@ -44,17 +47,17 @@ public class AutoBookmark {
 					String surl = "https://supermariomakerbookmark.nintendo.net/courses/" + mapcode;
 					int res = 0;
 					try {
-						res = postURL(surl, "");
+						res = postURL(surl, "", "BOOKMARK");
 					} catch (IOException e1) {
 						e1.printStackTrace();
 					}
 					if(res == 404){
-						JOptionPane.showMessageDialog(null, "맵이 존재하지 않습니다.", "간단 북마크 등록기 - 오류", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(null, "맵이 존재하지 않습니다. ("+res+")", "간단 북마크 등록기 - 오류", JOptionPane.ERROR_MESSAGE);
 					}
 					else{
 						surl = "https://supermariomakerbookmark.nintendo.net/courses/" + mapcode + "/play_at_later";
 						try {
-							res = postURL(surl, "");
+							res = postURL(surl, "", "BOOKMARK");
 						} catch (IOException e1) {
 							e1.printStackTrace();
 						}
@@ -68,6 +71,8 @@ public class AutoBookmark {
 				}
 			}
 		});
+		jf.add(jtf);jf.add(jb);
+		jf.setVisible(true);
 		
 	}
 
@@ -79,27 +84,19 @@ public class AutoBookmark {
 	    frame.setLocation(xpos,ypos);
 	}
 	
-	public int postURL(String surl, String param) throws IOException{
+	public int postURL(String surl, String param, String type) throws IOException{
 		URL url = new URL(surl);
-		HttpsURLConnection conn =  (HttpsURLConnection)url.openConnection();
-		conn.setRequestMethod("POST");
-		conn.setUseCaches(false);
-		conn.addRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+		URLConnection uconn = url.openConnection();
+		HttpsURLConnection conn =  (HttpsURLConnection)uconn;
         if (cookies != null) {
         	conn.addRequestProperty("Cookie", cookies);
         }
-        
-        conn.setDoOutput(true);
-        DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
-		wr.writeBytes(param);
-		wr.flush();
-		wr.close();
-		String cookieTemp = conn.getHeaderField("Set-Cookie");
+        String cookieTemp = conn.getHeaderField("Set-Cookie");
         if(cookieTemp != null){
         	cookies = cookieTemp;
         }
         int responseCode = conn.getResponseCode();
-        System.out.println("[LOGIN] POST 시도 중... | " + param +" --> "+surl);
+        System.out.println("["+type+"] POST 시도 중... | " + param +" --> "+surl);
         return responseCode;
 	}
 	
